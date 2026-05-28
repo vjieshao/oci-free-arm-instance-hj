@@ -9,11 +9,11 @@ env:
   # 1. Suppress warnings to keep logs clean
   SUPPRESS_LABEL_WARNING: true
 
-  # 2. Mumbai Configuration (Verified)
-  OCI_CLI_REGION: "ap-mumbai-1"
-  AD_NAME: "qaqb:AP-MUMBAI-1-AD-1"
-  IMAGE_ID: "ocid1.image.oc1.ap-mumbai-1.aaaaaaaahzcec4tjbvlvkptojwrc5zo4zazgdnwwyg5f5ayjpkreigtzwpxa"
-  SUBNET_ID: "ocid1.subnet.oc1.ap-mumbai-1.aaaaaaaal7czmysz7hqztjcrt72oaoipcqo6rin4w5bvq64vfrxbjtw7nx4q"
+  # 2. OCI resource configuration
+  OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+  AD_NAME: ${{ secrets.AD_NAME }}
+  IMAGE_ID: ${{ secrets.IMAGE_ID }}
+  SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
 
   # 3. Secrets
   COMPARTMENT_ID: ${{ secrets.OCI_COMPARTMENT_ID }}
@@ -21,6 +21,7 @@ env:
   OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
   OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
   OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+  SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
 
 jobs:
   build-and-deploy:
@@ -48,20 +49,35 @@ jobs:
           # Create Directory
           mkdir -p /home/runner/.oci
 
+          # Validate required secrets before calling OCI.
+          missing=0
+          for name in OCI_CLI_REGION AD_NAME IMAGE_ID SUBNET_ID COMPARTMENT_ID OCI_CLI_USER OCI_CLI_TENANCY OCI_CLI_FINGERPRINT OCI_CLI_KEY_CONTENT SSH_PUBLIC_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "Missing required GitHub secret/env: $name"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+
           # Write Key File
-          echo "${{ secrets.OCI_CLI_KEY_CONTENT }}" > /home/runner/.oci/oci_api_key.pem
+          printf '%s\n' "$OCI_CLI_KEY_CONTENT" > /home/runner/.oci/oci_api_key.pem
           chmod 600 /home/runner/.oci/oci_api_key.pem
 
           # Write Config File (Absolute Paths)
           echo "[DEFAULT]" > /home/runner/.oci/config
-          echo "user=${{ secrets.OCI_CLI_USER }}" >> /home/runner/.oci/config
-          echo "tenancy=${{ secrets.OCI_CLI_TENANCY }}" >> /home/runner/.oci/config
-          echo "fingerprint=${{ secrets.OCI_CLI_FINGERPRINT }}" >> /home/runner/.oci/config
+          echo "user=${OCI_CLI_USER}" >> /home/runner/.oci/config
+          echo "tenancy=${OCI_CLI_TENANCY}" >> /home/runner/.oci/config
+          echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> /home/runner/.oci/config
           echo "key_file=/home/runner/.oci/oci_api_key.pem" >> /home/runner/.oci/config
           echo "region=${{ env.OCI_CLI_REGION }}" >> /home/runner/.oci/config
           
           # Write SSH Key
-          echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/my_ssh_key.pub
+          printf '%s\n' "$SSH_PUBLIC_KEY" > /home/runner/my_ssh_key.pub
+
+          # Verify OCI authentication before creating resources.
+          oci iam region list >/dev/null
 
           # Launch VM (50GB Boot Volume to avoid Quota Limits)
           OCI_OUTPUT=$(oci compute instance launch \

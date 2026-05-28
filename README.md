@@ -34,7 +34,7 @@ Click the **"Fork"** button at the top-right of this page. This will create a co
 
 ## Step 2: Generate Your OCI API Credentials
 
-This is the most detailed step. You need to gather **11 pieces of information** from your OCI account and your computer.
+This is the most detailed step. You need to gather **10 pieces of information** from your OCI account and your computer.
 
 ### A. Core IDs (Tenancy, User, Region)
 
@@ -56,7 +56,7 @@ This is the most detailed step. You need to gather **11 pieces of information** 
 5.  Click the **"Add"** button.
 6.  A "Configuration File Preview" will pop up. From this box, copy the `fingerprint` value. This is your `OCI_CLI_FINGERPRINT`.
 
-### C. VM-Specific IDs (Subnet, Image, AD)
+### C. VM-Specific IDs (Subnet, AD)
 
 1.  **Subnet ID:**
     * Go to the OCI Console menu (☰) -> **Networking** -> **Virtual Cloud Networks**.
@@ -70,13 +70,8 @@ This is the most detailed step. You need to gather **11 pieces of information** 
     * In the **"Placement"** section, look at the **"Availability Domain"** dropdown. You likely only have one.
     * Copy its name *exactly* as it appears (e.g., `KClJ:AP-SINGAPORE-1-AD-1`). This is your `AD_NAME`.
 3.  **Image ID:**
-    * On the same "Create Instance" page, in the **"Image and shape"** section, click **"Change Image"**.
-    * Select **"Canonical Ubuntu"** (or another OS of your choice).
-    * Click the name of the image (e.g., "Canonical Ubuntu 22.04"). A details panel will slide out.
-    * Copy the **OCID** of the image. This is your `IMAGE_ID`.
-    * You can now cancel the "Create Instance" wizard.
-    * If you still can not find the image, check this website and choose your image and copy ocid mentioned according to region. <https://docs.oracle.com/en-us/iaas/images/>
-    * Set this `IMAGE_ID` as a GitHub Actions secret.
+    * The workflow automatically resolves the newest compatible Canonical Ubuntu ARM image for `VM.Standard.A1.Flex`.
+    * `IMAGE_ID` is no longer required.
 4.  **OCPUs and RAM**
     * The default settings in this action provision an instance with 4 OCPUs and 24 GB memory.
     * You can change this in the workflow `--shape-config '{"ocpus":4,"memoryInGBs":24}' \`
@@ -111,12 +106,11 @@ Go to your forked repository on GitHub.
 
 1.  Click the **"Settings"** tab.
 2.  In the left menu, click **"Secrets and variables"** -> **"Actions"**.
-3.  Click the **"New repository secret"** button for *each* of the 11 secrets listed below.
+3.  Click the **"New repository secret"** button for *each* of the 10 secrets listed below.
 
 #### **VM Secrets**
 
 * `OCI_COMPARTMENT_ID` (Value: Your Tenancy OCID from Step 2A)
-* `IMAGE_ID` (Value: Your Image OCID from Step 2C)
 * `OCI_SUBNET_ID` (Value: Your Subnet OCID from Step 2C)
 * `AD_NAME` (Value: Your Availability Domain name from Step 2C)
 * `SSH_PUBLIC_KEY` (Value: The `ssh-rsa...` key from Step 2D)

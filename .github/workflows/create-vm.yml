@@ -51,7 +51,7 @@ jobs:
 
           # Validate required secrets before calling OCI.
           missing=0
-          for name in OCI_CLI_REGION AD_NAME IMAGE_ID SUBNET_ID COMPARTMENT_ID OCI_CLI_USER OCI_CLI_TENANCY OCI_CLI_FINGERPRINT OCI_CLI_KEY_CONTENT SSH_PUBLIC_KEY; do
+          for name in OCI_CLI_REGION AD_NAME SUBNET_ID COMPARTMENT_ID OCI_CLI_USER OCI_CLI_TENANCY OCI_CLI_FINGERPRINT OCI_CLI_KEY_CONTENT SSH_PUBLIC_KEY; do
             if [ -z "${!name}" ]; then
               echo "Missing required GitHub secret/env: $name"
               missing=1
@@ -79,6 +79,22 @@ jobs:
           # Verify OCI authentication before creating resources.
           oci iam region list >/dev/null
           echo "OCI auth OK. Region: ${OCI_CLI_REGION}"
+
+          # Use the newest Ubuntu platform image compatible with A1.Flex.
+          IMAGE_ID=$(oci compute image list \
+            --compartment-id "$COMPARTMENT_ID" \
+            --operating-system "Canonical Ubuntu" \
+            --shape "VM.Standard.A1.Flex" \
+            --sort-by TIMECREATED \
+            --sort-order DESC \
+            --all \
+            --query 'data[0].id' \
+            --raw-output)
+          if [ -z "$IMAGE_ID" ] || [ "$IMAGE_ID" = "null" ]; then
+            echo "Could not resolve an ARM-compatible Ubuntu image for ${OCI_CLI_REGION}."
+            exit 1
+          fi
+          echo "Resolved ARM image: ${IMAGE_ID}"
 
           # Launch VM (50GB Boot Volume to avoid Quota Limits)
           OCI_OUTPUT=$(oci compute instance launch \

@@ -41,7 +41,7 @@ jobs:
         id: create_vm
         continue-on-error: true 
         run: |
-          set -o pipefail
+          set -euo pipefail
 
           # Install OCI CLI
           pip install oci-cli
@@ -71,13 +71,14 @@ jobs:
           echo "tenancy=${OCI_CLI_TENANCY}" >> /home/runner/.oci/config
           echo "fingerprint=${OCI_CLI_FINGERPRINT}" >> /home/runner/.oci/config
           echo "key_file=/home/runner/.oci/oci_api_key.pem" >> /home/runner/.oci/config
-          echo "region=${{ env.OCI_CLI_REGION }}" >> /home/runner/.oci/config
+          echo "region=${OCI_CLI_REGION}" >> /home/runner/.oci/config
           
           # Write SSH Key
           printf '%s\n' "$SSH_PUBLIC_KEY" > /home/runner/my_ssh_key.pub
 
           # Verify OCI authentication before creating resources.
           oci iam region list >/dev/null
+          echo "OCI auth OK. Region: ${OCI_CLI_REGION}"
 
           # Launch VM (50GB Boot Volume to avoid Quota Limits)
           OCI_OUTPUT=$(oci compute instance launch \

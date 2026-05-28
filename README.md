@@ -1,6 +1,6 @@
 # OCI Always Free Arm (A1.Flex) VM Creator
 
-[![Try to Create OCI VM](https://github.com/heykapil/oci-free-arm-instance/actions/workflows/create-vm.yml/badge.svg)](https://github.com/heykapil/oci-free-arm-instance/actions/workflows/create-vm.yml)
+[![Try to Create OCI VM](https://github.com/vjieshao/oci-free-arm-instance-hj/actions/workflows/create-vm.yml/badge.svg)](https://github.com/vjieshao/oci-free-arm-instance-hj/actions/workflows/create-vm.yml)
 
 This repository contains a GitHub Actions workflow that automatically tries to provision an "Always Free" `VM.Standard.A1.Flex` (Arm) compute instance in your Oracle Cloud Infrastructure (OCI) account.
 
@@ -9,7 +9,7 @@ This is necessary because the "Always Free" Arm instances are a popular resource
 ## Features
 
 * **Fully Automated:** Runs entirely within GitHub Actions. You don't need to run anything on your local machine.
-* **Persistent:** The workflow runs on a 10-minute schedule, continuously retrying until it successfully provisions your VM.
+* **Persistent:** The workflow runs on a 5-minute schedule, continuously retrying until it successfully provisions your VM.
 * **Secure:** All sensitive credentials, keys, and IDs are stored in encrypted GitHub Secrets. The repository itself contains no private information and is safe to be public.
 * **Fast:** Uses GitHub's caching to store the `oci-cli` installation, so subsequent runs are much faster.
 * **Informative:** Sends detailed notifications to a Discord channel on every attempt, showing the full success or error log (e.g., "Out of host capacity").
@@ -63,7 +63,7 @@ This is the most detailed step. You need to gather **11 pieces of information** 
     * Click on your VCN (there is likely one default VCN).
     * Click on **"Subnets"** in the left menu.
     * Click on your public subnet (e.g., `Public Subnet ...`).
-    * Copy the **OCID** of the subnet. This is your `SUBNET_ID`.
+    * Copy the **OCID** of the subnet. This is your `OCI_SUBNET_ID`.
 2.  **Availability Domain (AD) Name:**
     * Go to the OCI Console menu (☰) -> **Compute** -> **Instances**.
     * Click **"Create Instance"**.
@@ -76,14 +76,14 @@ This is the most detailed step. You need to gather **11 pieces of information** 
     * Copy the **OCID** of the image. This is your `IMAGE_ID`.
     * You can now cancel the "Create Instance" wizard.
     * If you still can not find the image, check this website and choose your image and copy ocid mentioned according to region. <https://docs.oracle.com/en-us/iaas/images/>
-    * set this `IMAGE_ID` in your action env.
+    * Set this `IMAGE_ID` as a GitHub Actions secret.
 4.  **OCPUs and RAM**
-    * The default settings in this action is to provision instance with 2 OCPUs and 12 GB memory.
-    * you can change this in action line 59 `--shape-config '{"ocpus":2,"memoryInGBs":12}' \`
+    * The default settings in this action provision an instance with 4 OCPUs and 24 GB memory.
+    * You can change this in the workflow `--shape-config '{"ocpus":4,"memoryInGBs":24}' \`
 6. **Boot Volume and Name**
-    * The default settings in this action is to provision instance with `100`GB boot volume with name `coolify-vm`.
-    * you can change bootvolume in action line 65 `--boot-volume-size-in-gbs 100' \`
-    * you can change instance name in same command (action line 64) `--display-name "coolify-vm"`
+    * The default settings in this action provision an instance with a `200`GB boot volume named `jackie-vm`.
+    * You can change boot volume size in the workflow `--boot-volume-size-in-gbs 200`
+    * You can change instance name in the same command `--display-name "jackie-vm"`
    
 ### D. Your SSH Public Key
 
@@ -143,7 +143,7 @@ You're all set! Now you just need to start the process.
 2.  In the left sidebar, click on **"Try to Create OCI VM"**.
 3.  You will see a message: "This workflow has a `workflow_dispatch` event." Click the **"Run workflow"** button on the right, and then **"Run workflow"** again.
 
-This will start the first run. From now on, the `schedule` will automatically run it every 10 minutes. You can check the "Actions" tab to see the logs from each run. You will also get a notification in Discord every time it tries.
+This will start the first run. From now on, the `schedule` will automatically run it every 5 minutes. You can check the "Actions" tab to see the logs from each run. You will also get a notification in Discord every time it tries.
 
 ---
 
